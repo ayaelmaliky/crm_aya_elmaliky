@@ -4,59 +4,65 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
+
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-// Connexion MongoDB Mongoose
-const MONGODB_URI = process.env.MONGODB_URI;
+// Connexion MongoDB Atlas via Mongoose
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('Connecté avec succès à MongoDB Atlas'))
+.catch(err => console.error('Erreur de connexion MongoDB :', err));
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('Connexion à MongoDB Atlas réussie !'))
-  .catch((err) => console.error('Erreur de connexion à MongoDB :', err));
-
-// Schéma et Modèle Mongoose pour les items
+// Schéma et Modèle Mongoose
 const itemSchema = new mongoose.Schema({
-  name: { type: String, required: true }
+    name: { type: String, required: true }
 });
 const Item = mongoose.model('Item', itemSchema);
 
-// Route Health
+// Route de santé (Health check)
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Le serveur répond correctement' });
+    res.status(200).json({ status: 'OK', message: 'Le serveur backend fonctionne correctement.' });
 });
 
-// Route GET /api/items (Récupérer depuis MongoDB)
+// GET /api/items : Récupérer tous les éléments
 app.get('/api/items', async (req, res) => {
-  try {
-    const items = await Item.find();
-    res.status(200).json(items);
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur lors de la récupération' });
-  }
-});
-
-// Route POST /api/items (Créer dans MongoDB)
-app.post('/api/items', async (req, res) => {
-  try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'Le champ name est requis' });
+    try {
+        const items = await Item.find();
+        res.status(200).json(items);
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de la récupération des éléments.' });
     }
-    const newItem = new Item({ name });
-    await newItem.save();
-    res.status(201).json({ message: 'Item créé avec succès', item: newItem });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur lors de la création' });
-  }
-});
-// Route de test pour la racine du backend
-app.get('/', (req, res) => {
-  res.send("API CRM opérationnelle !");
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+// POST /api/items : Créer un élément (avec prévention des doublons)
+app.post('/api/items', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ error: 'Le champ name est obligatoire.' });
+        }
+
+        const trimmedName = name.trim();
+
+        // Test D (Précaution anti-doublons en cas de nouvelle tentative / retry)
+        const existingItem = await Item.findOne({ name: trimmedName });
+        if (existingItem) {
+            return res.status(200).json(existingItem);
+        }
+
+        const newItem = new Item({ name: trimmedName });
+        await newItem.save();
+        res.status(201).json(newItem);
+    } catch (error) {
+        res.status(500).json({ error: 'Erreur lors de l’ajout de l’élément.' });
+    }
 });
-const dns = require('dns');
-dns.setServers(["1.1.1.1", "8.8.8.8"]);
+
+app.listen(PORT, () => {
+    console.log(`Serveur en écoute sur le port ${PORT}`);
+});
