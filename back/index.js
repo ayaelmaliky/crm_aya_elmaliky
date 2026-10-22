@@ -49,6 +49,10 @@ app.post('/api/items', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur lors de la création' });
   }
 });
+// Route de test pour la racine du backend
+app.get('/', (req, res) => {
+  res.send("API CRM opérationnelle !");
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
