@@ -1,12 +1,52 @@
+```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <title>CRM Aya - Gestion des éléments</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
- <script src="index.js"></script>   
+    <div class="container">
+
+        <h1>Gestion des Éléments (CRM)</h1>
+
+        <!-- Zone pour afficher les erreurs -->
+        <div id="error-message" class="error hidden"></div>
+
+        <!-- Formulaire d'ajout -->
+        <form id="item-form">
+            <div class="form-group">
+                <label for="item-name">Nom de l'élément :</label>
+
+                <input
+                    type="text"
+                    id="item-name"
+                    name="name"
+                    placeholder="Entrez un nom..."
+                    required
+                >
+            </div>
+
+            <button type="submit">Ajouter l'élément</button>
+        </form>
+
+        <!-- Liste des éléments -->
+        <div class="list-section">
+            <h2>Liste des éléments</h2>
+
+            <ul id="items-list">
+                <!-- Les éléments seront affichés par JavaScript -->
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Connexion avec le JavaScript frontend -->
+    <script src="index.js"></script>
 </body>
 </html>
